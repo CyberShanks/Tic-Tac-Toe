@@ -1,43 +1,108 @@
 
 const Game = (() => {
 
-    //define PlayerFactory
+    //private functions
+    const _storePlayerMove = move => {
+        console.log("player move stored");
+        currentPlayer.storePlayerMove(move);
+    }
+
+    //Player Factory
     const Player = (name, marker) => {
+        
+        //global Player variable
+        let playerMoves = [];
+
+        //private function
         const _changeHeader = () => {
             const playerTurnDOMElement = document.querySelector(".player-turn");
             playerTurnDOMElement.textContent = name;
         }
+
+        const storePlayerMove = move => {
+            playerMoves.push(move);
+            console.log(playerMoves);
+        }
+
         const turn = () => {
             _changeHeader();
-            //end events
         }
-        const sayName = () => console.log(`my name is ${name}`);
-        const sayMarker = () => {
-            console.log(`my marker is ${marker}`);
-        }
-        return { turn, sayName, sayMarker };
+
+        return { turn, name, marker, storePlayerMove };
     }
 
-    //define GameBlockFactory
+    //GameBlock Factory
     const GameBlock = (row, column) => {
-        //next step add event listener to each newly created block --> <<associate object with DOM>>
-        const _click = () => console.log("I have been clicked!");
-        const _removeEventListener = () => console.log("Event removed");
-        const _changeReactState = () => console.log("react state changed");
-        const _storePlayerMove = () => console.log("player move stored");
-        const checkGameBoard = () => console.log("win? lose?");
+
+        // global GameBlock variable
+        let reactState = true;
+
+        const _removeEventListener = element => {
+            console.log("Event removed");
+            element.removeEventListener('click', _click);
+        }
+
+        const _changeReactState = () => {
+            console.log("react state changed");
+            reactState = false;
+        }
+
+        const _applyMarker = element => {
+            //mark the box
+            element.textContent = currentPlayer.marker;
+        }
+
+        const _click = (e) => {
+            _changeReactState();
+            _removeEventListener(e.target);
+            _applyMarker(e.target);
+            _storePlayerMove(e.target.id);
+            // _checkGameBoard();
+            globalGameObject.getPlayers().switchTurn();
+        }
+
+        const _fetchElement = () => {
+            var blockNumber = String(row) + String(column);
+            return document.getElementById(blockNumber);
+        }
+
+        const _addEventListener = () => {
+            blockElement = _fetchElement();
+            blockElement.addEventListener('click', _click, false);
+        }
+
+        const checkReactState = () => reactState;
         const checkCoordinates = () => console.log(`row = ${row} column = ${column}`);
 
-        return { checkGameBoard, checkCoordinates };
+        //automatically add event listener to new block;
+        _addEventListener();
+
+        return { checkCoordinates, checkReactState };
     }
 
-    //private functions
-    const _initializePlayers = () => {
+    // Players Object
+    const _Players = () => {
+        //create players
         const player1 = Player('player1', 'X');
         const player2 = Player('player2', 'O');
-        return { player1, player2 };
+
+        const switchTurn = () => {
+            console.log();
+            if (player1 === currentPlayer) {
+                currentPlayer = player2;
+            }
+            else {
+                currentPlayer = player1;
+            }
+        }
+
+        return { player1, player2, switchTurn };
     }
-    const _initializeBlocks = () => {
+
+
+    // Game Board Object
+    const _Blocks = () => {
+        // create game blocks
         const block1 = GameBlock(1, 1);
         const block2 = GameBlock(1, 2);
         const block3 = GameBlock(1, 3);
@@ -47,17 +112,32 @@ const Game = (() => {
         const block7 = GameBlock(3, 1);
         const block8 = GameBlock(3, 2);
         const block9 = GameBlock(3, 3);
-        return { block1, block2, block3, block4, block5, block6, block7, block8, block9 };
+
+        const checkGameBoard = () => console.log("win? lose?");
+
+        return { block1, block2, block3, block4, block5, block6, block7, block8, block9, checkGameBoard };
+    }
+
+    const _initialization = () => {
+
+        const GameBoard = _Blocks();
+        const Players = _Players();
+
+        const getGameBoard = () => GameBoard;
+        const getPlayers = () => Players;
+
+        return { getGameBoard, getPlayers };
     }
 
     const start = () => {
-        //initializations
-        const Players = _initializePlayers();
-        const GameBoard = _initializeBlocks();
-        Players.player1.turn();
-    };
+        currentPlayer = globalGameObject.getPlayers().player1;
+    }
+
     const end = () => { };
-    const nextMove = () => { };
+
+    //global Game Variables
+    let currentPlayer;
+    const globalGameObject = _initialization();
 
     return { start };
 })();
