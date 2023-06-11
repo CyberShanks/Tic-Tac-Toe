@@ -24,11 +24,13 @@ const Game = (() => {
             console.log(playerMoves);
         }
 
+        const getPlayerMoves = () => playerMoves;
+
         const turn = () => {
             _changeHeader();
         }
 
-        return { turn, name, marker, storePlayerMove };
+        return { turn, name, marker, storePlayerMove, getPlayerMoves };
     }
 
     //GameBlock Factory
@@ -57,7 +59,7 @@ const Game = (() => {
             _removeEventListener(e.target);
             _applyMarker(e.target);
             _storePlayerMove(e.target.id);
-            // _checkGameBoard();
+            globalGameObject.getGameBoard().checkGameBoard();
             globalGameObject.getPlayers().switchTurn();
         }
 
@@ -72,12 +74,17 @@ const Game = (() => {
         }
 
         const checkReactState = () => reactState;
-        const checkCoordinates = () => console.log(`row = ${row} column = ${column}`);
+        const checkCoordinates = () => {row, column};
+        const disableBlock = () => { 
+            let element = _fetchElement();
+            element.removeEventListener('click', _click);
+        }
 
         //automatically add event listener to new block;
         _addEventListener();
 
-        return { checkCoordinates, checkReactState };
+
+        return { checkCoordinates, checkReactState, disableBlock };
     }
 
     // Players Object
@@ -113,9 +120,65 @@ const Game = (() => {
         const block8 = GameBlock(3, 2);
         const block9 = GameBlock(3, 3);
 
-        const checkGameBoard = () => console.log("win? lose?");
+        const _checkSubset = (parentArray, subsetArray) => {
+            let set = new Set(parentArray);
+            return subsetArray.every(x => set.has(x));
+          }
 
-        return { block1, block2, block3, block4, block5, block6, block7, block8, block9, checkGameBoard };
+        const _checkWin = playerMoves => {
+
+            let winCondition = ['11','21','31'];
+            if (_checkSubset(playerMoves, winCondition)) return true;
+            winCondition = ['12','22','32'];
+            if (_checkSubset(playerMoves, winCondition)) return true;
+            winCondition = ['13','23','33'];
+            if (_checkSubset(playerMoves, winCondition)) return true;
+            winCondition = ['11','12','13'];
+            if (_checkSubset(playerMoves, winCondition)) return true;
+            winCondition = ['21','22','23'];
+            if (_checkSubset(playerMoves, winCondition)) return true;
+            winCondition = ['31','32','33'];
+            if (_checkSubset(playerMoves, winCondition)) return true;
+            winCondition = ['11','22','33'];
+            if (_checkSubset(playerMoves, winCondition)) return true;
+            winCondition = ['31','32','13'];
+            if (_checkSubset(playerMoves, winCondition)) return true;
+
+            return false;
+        }
+
+        const disableBoard = () => {
+            if (block1.checkReactState()) block1.disableBlock();
+            if (block2.checkReactState()) block2.disableBlock();
+            if (block3.checkReactState()) block3.disableBlock();
+            if (block4.checkReactState()) block4.disableBlock();
+            if (block5.checkReactState()) block5.disableBlock();
+            if (block6.checkReactState()) block6.disableBlock();
+            if (block7.checkReactState()) block7.disableBlock();
+            if (block8.checkReactState()) block8.disableBlock();
+            if (block9.checkReactState()) block9.disableBlock();
+        }
+
+        const checkGameBoard = () => {
+            //check win -> three in a row
+            let player1Moves = globalGameObject.getPlayers().player1.getPlayerMoves();
+            let player2Moves = globalGameObject.getPlayers().player2.getPlayerMoves();
+            
+            if (player1Moves.length >= 3){
+                if (_checkWin(player1Moves)) _end('win1');
+            }
+
+            if (player2Moves.length >= 3){
+                if (_checkWin(player2Moves)) _end('win2');
+            }
+
+            //check tie -> reactState of ALL blocks is false
+            if (!(block1.checkReactState() || block2.checkReactState() || block3.checkReactState() || block4.checkReactState() || block5.checkReactState() || block6.checkReactState() || block7.checkReactState() || block8.checkReactState() || block9.checkReactState())){
+                _end('tie');
+            }
+        };
+
+        return { checkGameBoard, disableBoard };
     }
 
     const _initialization = () => {
@@ -133,7 +196,23 @@ const Game = (() => {
         currentPlayer = globalGameObject.getPlayers().player1;
     }
 
-    const end = () => { };
+    const _end = outcome => {
+        if (outcome === 'tie'){
+            //initiate tie ending
+            console.log("ITS A TIE!!!!!!");
+        }
+
+        if (outcome === 'win1'){
+            //player 1 wins
+            console.log("PLAYER 1 WINS!!!");
+        }
+
+        if (outcome === 'win2'){
+            //player 2 wins
+            console.log("PLAYER 2 WINS!!!!");
+        }
+        globalGameObject.getGameBoard().disableBoard();
+     };
 
     //global Game Variables
     let currentPlayer;
