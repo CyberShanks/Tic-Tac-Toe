@@ -13,10 +13,9 @@ const Game = (() => {
         //global Player variable
         let playerMoves = [];
 
-        //private function
-        const _changeHeader = () => {
+        const changeHeader = () => {
             const playerTurnDOMElement = document.querySelector(".player-turn");
-            playerTurnDOMElement.textContent = name;
+            playerTurnDOMElement.textContent = String(name) + " 's Turn";
         }
 
         const storePlayerMove = move => {
@@ -26,11 +25,7 @@ const Game = (() => {
 
         const getPlayerMoves = () => playerMoves;
 
-        const turn = () => {
-            _changeHeader();
-        }
-
-        return { turn, name, marker, storePlayerMove, getPlayerMoves };
+        return { changeHeader, name, marker, storePlayerMove, getPlayerMoves };
     }
 
     //GameBlock Factory
@@ -101,6 +96,7 @@ const Game = (() => {
             else {
                 currentPlayer = player1;
             }
+            currentPlayer.changeHeader();
         }
 
         return { player1, player2, switchTurn };
@@ -141,7 +137,7 @@ const Game = (() => {
             if (_checkSubset(playerMoves, winCondition)) return true;
             winCondition = ['11','22','33'];
             if (_checkSubset(playerMoves, winCondition)) return true;
-            winCondition = ['31','32','13'];
+            winCondition = ['31','22','13'];
             if (_checkSubset(playerMoves, winCondition)) return true;
 
             return false;
@@ -165,11 +161,17 @@ const Game = (() => {
             let player2Moves = globalGameObject.getPlayers().player2.getPlayerMoves();
             
             if (player1Moves.length >= 3){
-                if (_checkWin(player1Moves)) _end('win1');
+                if (_checkWin(player1Moves)) {
+                    _end('win1');
+                    return;
+                }
             }
 
             if (player2Moves.length >= 3){
-                if (_checkWin(player2Moves)) _end('win2');
+                if (_checkWin(player2Moves)) {
+                    _end('win2');
+                    return;
+                }
             }
 
             //check tie -> reactState of ALL blocks is false
@@ -194,22 +196,27 @@ const Game = (() => {
 
     const start = () => {
         currentPlayer = globalGameObject.getPlayers().player1;
+        currentPlayer.changeHeader();
     }
 
     const _end = outcome => {
+        const gameOutcome = document.querySelector(".game-msg");
         if (outcome === 'tie'){
             //initiate tie ending
             console.log("ITS A TIE!!!!!!");
+            gameOutcome.textContent = "ITS A TIE!!!!!!"
         }
 
         if (outcome === 'win1'){
             //player 1 wins
             console.log("PLAYER 1 WINS!!!");
+            gameOutcome.textContent = "PLAYER 1 WINS!!!";
         }
 
         if (outcome === 'win2'){
             //player 2 wins
             console.log("PLAYER 2 WINS!!!!");
+            gameOutcome.textContent = "PLAYER 2 WINS!!!"
         }
         globalGameObject.getGameBoard().disableBoard();
      };
